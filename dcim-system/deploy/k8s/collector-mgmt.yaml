@@ -1,0 +1,96 @@
+---
+# 采集管理服务 Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: collector-mgmt
+  namespace: dcim
+  labels:
+    app: collector-mgmt
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: collector-mgmt
+  template:
+    metadata:
+      labels:
+        app: collector-mgmt
+    spec:
+      containers:
+      - name: collector-mgmt
+        image: dcim/collector-mgmt:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 50051
+          name: grpc
+        env:
+        - name: CONFIG_PATH
+          value: "/etc/config/config.yaml"
+        volumeMounts:
+        - name: config
+          mountPath: /etc/config
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: config
+        configMap:
+          name: collector-mgmt-config
+
+---
+# 采集管理服务 Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: collector-mgmt-service
+  namespace: dcim
+spec:
+  selector:
+    app: collector-mgmt
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+  - name: grpc
+    port: 50051
+    targetPort: 50051
+  type: ClusterIP
+
+---
+# 采集管理服务 ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: collector-mgmt-config
+  namespace: dcim
+data:
+  config.yaml: |
+    server:
+      port: 8080
+      mode: release
+    grpc:
+      port: 50051
+      use_tls: false
+    redis:
+      addr: "redis-service:6379"
+      password: ""
+      db: 0

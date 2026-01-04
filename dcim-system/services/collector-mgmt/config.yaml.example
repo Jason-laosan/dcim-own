@@ -1,0 +1,15 @@
+# 采集管理服务配置
+server:
+  port: 8080
+  mode: release  # debug, release
+
+grpc:
+  port: 50051
+  use_tls: false
+  cert_file: ""
+  key_file: ""
+
+redis:
+  addr: "redis:6379"
+  password: ""
+  db: 0

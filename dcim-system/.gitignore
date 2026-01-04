@@ -1,0 +1,52 @@
+# 二进制文件
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# 测试文件
+*.test
+*.out
+coverage.txt
+coverage.html
+
+# 依赖目录
+vendor/
+
+# IDE配置
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 配置文件（包含敏感信息）
+config.yaml
+*.env
+.env.local
+
+# 日志文件
+*.log
+logs/
+
+# 数据文件
+data/
+*.db
+badger/
+
+# 临时文件
+tmp/
+temp/
+*.tmp
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# Docker相关
+.docker/
+
+# Go相关
+go.work
+go.work.sum

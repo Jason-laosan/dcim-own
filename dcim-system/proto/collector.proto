@@ -1,0 +1,103 @@
+syntax = "proto3";
+
+package collector;
+
+option go_package = "github.com/dcim/proto/collector";
+
+// 采集管理服务
+service CollectorService {
+  // 下发采集任务
+  rpc AddTask(AddTaskRequest) returns (AddTaskResponse);
+
+  // 删除采集任务
+  rpc RemoveTask(RemoveTaskRequest) returns (RemoveTaskResponse);
+
+  // 更新采集任务
+  rpc UpdateTask(UpdateTaskRequest) returns (UpdateTaskResponse);
+
+  // 查询Agent状态
+  rpc GetAgentStatus(GetAgentStatusRequest) returns (GetAgentStatusResponse);
+
+  // 批量查询任务
+  rpc ListTasks(ListTasksRequest) returns (ListTasksResponse);
+}
+
+// 采集任务
+message CollectTask {
+  string task_id = 1;
+  string device_id = 2;
+  string device_ip = 3;
+  string device_type = 4;
+  string protocol = 5;
+  int32 interval = 6;
+  repeated string metrics = 7;
+  map<string, string> config = 8;
+  string cron_expr = 9;
+}
+
+// 添加任务请求
+message AddTaskRequest {
+  string agent_id = 1;
+  CollectTask task = 2;
+}
+
+// 添加任务响应
+message AddTaskResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// 删除任务请求
+message RemoveTaskRequest {
+  string agent_id = 1;
+  string task_id = 2;
+}
+
+// 删除任务响应
+message RemoveTaskResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// 更新任务请求
+message UpdateTaskRequest {
+  string agent_id = 1;
+  CollectTask task = 2;
+}
+
+// 更新任务响应
+message UpdateTaskResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// 查询Agent状态请求
+message GetAgentStatusRequest {
+  string agent_id = 1;
+}
+
+// Agent状态
+message AgentStatus {
+  string agent_id = 1;
+  string agent_name = 2;
+  string status = 3;
+  int64 last_heartbeat = 4;
+  int32 task_count = 5;
+  string data_center = 6;
+  string room = 7;
+}
+
+// 查询Agent状态响应
+message GetAgentStatusResponse {
+  AgentStatus status = 1;
+}
+
+// 查询任务列表请求
+message ListTasksRequest {
+  string agent_id = 1;
+}
+
+// 查询任务列表响应
+message ListTasksResponse {
+  repeated CollectTask tasks = 1;
+}

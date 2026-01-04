@@ -1,0 +1,127 @@
+version: '3.8'
+
+services:
+  # MQTT Broker - EMQ X
+  emqx:
+    image: emqx/emqx:5.3.0
+    container_name: dcim-emqx
+    ports:
+      - "1883:1883"      # MQTT
+      - "8083:8083"      # WebSocket
+      - "18083:18083"    # Dashboard
+    environment:
+      - EMQX_NAME=emqx
+      - EMQX_HOST=node1.emqx.io
+    volumes:
+      - emqx-data:/opt/emqx/data
+      - emqx-log:/opt/emqx/log
+    networks:
+      - dcim-network
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: dcim-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - dcim-network
+
+  # InfluxDB
+  influxdb:
+    image: influxdb:2.7
+    container_name: dcim-influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=adminpassword
+      - DOCKER_INFLUXDB_INIT_ORG=dcim
+      - DOCKER_INFLUXDB_INIT_BUCKET=device_metrics
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=dcim-token-1234567890
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+      - influxdb-config:/etc/influxdb2
+    networks:
+      - dcim-network
+
+  # PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: dcim-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=dcim
+      - POSTGRES_USER=dcim
+      - POSTGRES_PASSWORD=dcimpassword
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - dcim-network
+
+  # MinIO (对象存储)
+  minio:
+    image: minio/minio:latest
+    container_name: dcim-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+    networks:
+      - dcim-network
+
+  # 采集管理服务
+  collector-mgmt:
+    build:
+      context: ./services/collector-mgmt
+      dockerfile: ../../deploy/docker/Dockerfile.collector-mgmt
+    container_name: dcim-collector-mgmt
+    ports:
+      - "8080:8080"
+      - "50051:50051"
+    depends_on:
+      - redis
+    volumes:
+      - ./services/collector-mgmt/config.yaml:/app/config.yaml
+    networks:
+      - dcim-network
+    restart: unless-stopped
+
+  # 数据处理服务
+  data-processor:
+    build:
+      context: ./services/data-processor
+      dockerfile: ../../deploy/docker/Dockerfile.data-processor
+    container_name: dcim-data-processor
+    depends_on:
+      - emqx
+      - influxdb
+      - redis
+    volumes:
+      - ./services/data-processor/config.yaml:/app/config.yaml
+    networks:
+      - dcim-network
+    restart: unless-stopped
+
+volumes:
+  emqx-data:
+  emqx-log:
+  redis-data:
+  influxdb-data:
+  influxdb-config:
+  postgres-data:
+  minio-data:
+
+networks:
+  dcim-network:
+    driver: bridge

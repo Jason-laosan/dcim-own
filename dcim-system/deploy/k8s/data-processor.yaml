@@ -1,0 +1,66 @@
+---
+# 数据处理服务 Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-processor
+  namespace: dcim
+  labels:
+    app: data-processor
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: data-processor
+  template:
+    metadata:
+      labels:
+        app: data-processor
+    spec:
+      containers:
+      - name: data-processor
+        image: dcim/data-processor:latest
+        imagePullPolicy: Always
+        env:
+        - name: CONFIG_PATH
+          value: "/etc/config/config.yaml"
+        volumeMounts:
+        - name: config
+          mountPath: /etc/config
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+      volumes:
+      - name: config
+        configMap:
+          name: data-processor-config
+
+---
+# 数据处理服务 ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: data-processor-config
+  namespace: dcim
+data:
+  config.yaml: |
+    mqtt:
+      broker: "tcp://emqx-service:1883"
+      username: "dcim_processor"
+      password: "your_password_here"
+      topic: "dcim/collector/data"
+      qos: 1
+      client_id: "data-processor"
+    influxdb:
+      url: "http://influxdb-service:8086"
+      token: "your_influxdb_token"
+      org: "dcim"
+      bucket: "device_metrics"
+    redis:
+      addr: "redis-service:6379"
+      password: ""
+      db: 0
