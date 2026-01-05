@@ -1,0 +1,57 @@
+# DCIM采集Agent配置文件 - 仅被动接收模式
+
+agent:
+  id: "agent-003"
+  name: "广州数据中心-3号机房采集器"
+  data_center: "GZ-DC-01"
+  room: "Room-C"
+  max_concurrency: 1000
+  heartbeat_interval: 30
+  
+  # 仅启用被动接收模式
+  enable_pull_mode: false
+  enable_push_mode: true
+
+# MQTT配置（数据上报）
+mqtt:
+  broker: "tcp://localhost:1883"
+  username: "dcim_agent"
+  password: "your_password_here"
+  topic: "dcim/collector/data"
+  qos: 1
+  client_id: "agent-003"
+
+# gRPC配置
+grpc:
+  server_addr: "localhost:50051"
+  use_tls: false
+  cert_file: ""
+
+# 本地缓存配置
+cache:
+  path: "./data/cache"
+  max_cache_time: 24
+  clean_interval: 10
+
+# 被动接收器配置
+receiver:
+  enabled: true
+
+  # MQTT接收器 - 接收智能设备推送的数据
+  mqtt_receiver:
+    enabled: true
+    broker: "tcp://localhost:1883"
+    username: "dcim_receiver"
+    password: "your_password_here"
+    subscribe_topics:
+      - "device/+/data"
+      - "sensor/+/metrics"
+    qos: 1
+    client_id: "agent-003-receiver"
+
+  # Modbus接收器 - 接收Modbus设备推送的数据
+  modbus_receiver:
+    enabled: true
+    mode: "tcp"
+    listen_addr: "0.0.0.0:502"
+    slave_id: 1

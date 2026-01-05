@@ -1,0 +1,60 @@
+# DCIM采集Agent配置文件 - 双模式示例（主动拉取 + 被动接收）
+
+agent:
+  id: "agent-001"
+  name: "北京数据中心-1号机房采集器"
+  data_center: "BJ-DC-01"
+  room: "Room-A"
+  max_concurrency: 1000
+  heartbeat_interval: 30  # 心跳间隔(秒)
+  
+  # 采集模式配置
+  enable_pull_mode: true   # 启用主动拉取模式
+  enable_push_mode: true   # 启用被动接收模式
+
+# MQTT配置（数据上报）
+mqtt:
+  broker: "tcp://localhost:1883"
+  username: "dcim_agent"
+  password: "your_password_here"
+  topic: "dcim/collector/data"
+  qos: 1
+  client_id: "agent-001"
+
+# gRPC配置（与管理服务通信）
+grpc:
+  server_addr: "localhost:50051"
+  use_tls: false
+  cert_file: ""
+
+# 本地缓存配置
+cache:
+  path: "./data/cache"
+  max_cache_time: 24  # 最大缓存时长(小时)
+  clean_interval: 10  # 清理间隔(分钟)
+
+# 被动接收器配置
+receiver:
+  enabled: true  # 启用被动接收
+
+  # MQTT接收器配置（接收设备主动推送的数据）
+  mqtt_receiver:
+    enabled: true
+    broker: "tcp://localhost:1883"
+    username: "dcim_receiver"
+    password: "your_password_here"
+    subscribe_topics:
+      - "device/+/data"        # 订阅所有设备数据
+      - "sensor/+/metrics"     # 订阅传感器指标
+      - "smart_pdu/+/status"   # 订阅智能PDU状态
+    qos: 1
+    client_id: "agent-001-receiver"
+
+  # Modbus接收器配置（Modbus Slave模式）
+  modbus_receiver:
+    enabled: true
+    mode: "tcp"                # 模式: tcp/rtu
+    listen_addr: "0.0.0.0:502" # TCP监听地址
+    serial_port: ""            # RTU模式串口设备（如 /dev/ttyUSB0）
+    baud_rate: 9600            # RTU模式波特率
+    slave_id: 1                # 从站ID

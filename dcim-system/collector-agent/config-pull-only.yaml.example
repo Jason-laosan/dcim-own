@@ -1,0 +1,42 @@
+# DCIM采集Agent配置文件 - 仅主动拉取模式
+
+agent:
+  id: "agent-002"
+  name: "上海数据中心-2号机房采集器"
+  data_center: "SH-DC-01"
+  room: "Room-B"
+  max_concurrency: 1000
+  heartbeat_interval: 30
+  
+  # 仅启用主动拉取模式
+  enable_pull_mode: true
+  enable_push_mode: false
+
+# MQTT配置（数据上报）
+mqtt:
+  broker: "tcp://localhost:1883"
+  username: "dcim_agent"
+  password: "your_password_here"
+  topic: "dcim/collector/data"
+  qos: 1
+  client_id: "agent-002"
+
+# gRPC配置
+grpc:
+  server_addr: "localhost:50051"
+  use_tls: false
+  cert_file: ""
+
+# 本地缓存配置
+cache:
+  path: "./data/cache"
+  max_cache_time: 24
+  clean_interval: 10
+
+# 被动接收器配置（禁用）
+receiver:
+  enabled: false
+  mqtt_receiver:
+    enabled: false
+  modbus_receiver:
+    enabled: false

@@ -10,6 +10,7 @@ import (
 	"github.com/dcim/collector-agent/internal/cache"
 	"github.com/dcim/collector-agent/internal/collector"
 	"github.com/dcim/collector-agent/internal/protocol"
+	"github.com/dcim/collector-agent/internal/receiver"
 	"github.com/dcim/collector-agent/internal/scheduler"
 	"github.com/dcim/collector-agent/pkg/config"
 	"github.com/dcim/collector-agent/pkg/logger"
@@ -22,6 +23,7 @@ type Agent struct {
 	config     *config.Config
 	collector  *collector.Collector
 	scheduler  *scheduler.Scheduler
+	receiver   *receiver.Receiver // 被动接收器
 	cache      *cache.LocalCache
 	mqttClient mqtt.Client
 	ctx        context.Context
@@ -59,8 +61,11 @@ func NewAgent(cfg *config.Config) (*Agent, error) {
 	}
 	coll.RegisterProtocol("snmp", snmpProtocol)
 
-	// 创建调度器
-	sched := scheduler.NewScheduler(coll)
+	// 创建调度器（主动拉取模式）
+	var sched *scheduler.Scheduler
+	if cfg.Agent.EnablePullMode {
+		sched = scheduler.NewScheduler(coll)
+	}
 
 	// 创建MQTT客户端
 	mqttClient := createMQTTClient(cfg.MQTT)
@@ -73,6 +78,16 @@ func NewAgent(cfg *config.Config) (*Agent, error) {
 		mqttClient: mqttClient,
 		ctx:        ctx,
 		cancel:     cancel,
+	}
+
+	// 创建被动接收器（被动接收模式）
+	if cfg.Agent.EnablePushMode && cfg.Receiver.Enabled {
+		rec, err := receiver.NewReceiver(&cfg.Receiver, agent.handleReceivedData)
+		if err != nil {
+			cancel()
+			return nil, fmt.Errorf("failed to create receiver: %w", err)
+		}
+		agent.receiver = rec
 	}
 
 	return agent, nil
@@ -90,8 +105,19 @@ func (a *Agent) Start() error {
 	}
 	logger.Log.Info("MQTT connected")
 
-	// 启动调度器
-	a.scheduler.Start()
+	// 启动主动拉取模式
+	if a.config.Agent.EnablePullMode && a.scheduler != nil {
+		a.scheduler.Start()
+		logger.Log.Info("pull mode started")
+	}
+
+	// 启动被动接收模式
+	if a.config.Agent.EnablePushMode && a.receiver != nil {
+		if err := a.receiver.Start(); err != nil {
+			return fmt.Errorf("failed to start receiver: %w", err)
+		}
+		logger.Log.Info("push mode started")
+	}
 
 	// 启动心跳上报
 	a.wg.Add(1)
@@ -111,7 +137,14 @@ func (a *Agent) Stop() {
 	logger.Log.Info("stopping agent")
 
 	// 停止调度器
-	a.scheduler.Stop()
+	if a.scheduler != nil {
+		a.scheduler.Stop()
+	}
+
+	// 停止接收器
+	if a.receiver != nil {
+		a.receiver.Stop()
+	}
 
 	// 断开MQTT连接
 	a.mqttClient.Disconnect(250)
@@ -197,7 +230,8 @@ func (a *Agent) sendHeartbeat() {
 		"room":        a.config.Agent.Room,
 		"timestamp":   time.Now().Unix(),
 		"status":      "running",
-		"task_count":  len(a.scheduler.ListTasks()),
+		"pull_mode":   a.config.Agent.EnablePullMode,
+		"push_mode":   a.config.Agent.EnablePushMode,
 	}
 
 	payload, _ := json.Marshal(heartbeat)
@@ -245,6 +279,16 @@ func (a *Agent) retryCachedData() {
 			a.cache.Delete(data.DeviceID, data.Timestamp)
 		}
 	}
+}
+
+// handleReceivedData 处理被动接收的数据
+func (a *Agent) handleReceivedData(data *protocol.DeviceData) error {
+	logger.Log.Info("received data from push mode",
+		zap.String("device_id", data.DeviceID),
+		zap.String("device_ip", data.DeviceIP))
+
+	// 发布数据到MQTT
+	return a.PublishData(data)
 }
 
 // createMQTTClient 创建MQTT客户端

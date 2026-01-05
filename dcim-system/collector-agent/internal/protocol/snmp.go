@@ -121,6 +121,12 @@ func (s *SNMPProtocol) Validate(config map[string]interface{}) error {
 	return nil
 }
 
+// SupportedModes 返回支持的采集模式
+func (s *SNMPProtocol) SupportedModes() []CollectMode {
+	// SNMP仅支持主动拉取模式
+	return []CollectMode{CollectModePull}
+}
+
 // Close 关闭连接
 func (s *SNMPProtocol) Close() error {
 	if s.client != nil && s.client.Conn != nil {

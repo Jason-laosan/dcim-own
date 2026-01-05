@@ -14,7 +14,7 @@ import (
 // Collector 数据采集器
 type Collector struct {
 	protocols      map[string]protocol.Protocol // 协议实例池
-	cache          *LocalCache                  // 本地缓存
+	cache          *cache.LocalCache            // 本地缓存
 	maxConcurrency int                          // 最大并发数
 	mu             sync.RWMutex                 // 读写锁
 }
