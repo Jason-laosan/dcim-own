@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskHub - Go 学习项目</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <h1>TaskHub</h1>
+            <ul class="nav-links">
+                <li><a href="/" class="active">首页</a></li>
+                <li><a href="/tasks">任务管理</a></li>
+                <li><a href="/files">文件管理</a></li>
+                <li><a href="/monitor">实时监控</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section class="hero">
+            <h2>欢迎使用 TaskHub</h2>
+            <p>一个完整的 Go 语言学习项目，演示数据库操作、文件处理、SSE 推送和协程并发</p>
+        </section>
+
+        <section class="features">
+            <h3>核心功能</h3>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">💾</div>
+                    <h4>SQLite 数据库</h4>
+                    <p>使用 database/sql 标准库进行 CRUD 操作</p>
+                    <ul>
+                        <li>任务管理</li>
+                        <li>预编译语句</li>
+                        <li>事务处理</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📁</div>
+                    <h4>文件操作</h4>
+                    <p>完整的文件上传下载管理系统</p>
+                    <ul>
+                        <li>文件上传</li>
+                        <li>文件下载</li>
+                        <li>元数据管理</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📡</div>
+                    <h4>SSE 实时推送</h4>
+                    <p>Server-Sent Events 实时数据推送</p>
+                    <ul>
+                        <li>任务状态更新</li>
+                        <li>系统监控</li>
+                        <li>实时通知</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h4>协程并发</h4>
+                    <p>Worker Pool 并发任务处理</p>
+                    <ul>
+                        <li>Goroutine</li>
+                        <li>Channel 通信</li>
+                        <li>WaitGroup 同步</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="tech-stack">
+            <h3>技术栈</h3>
+            <div class="tech-list">
+                <span class="tech-tag">Go 1.21+</span>
+                <span class="tech-tag">Gin Framework</span>
+                <span class="tech-tag">SQLite</span>
+                <span class="tech-tag">Server-Sent Events</span>
+                <span class="tech-tag">HTML/CSS/JavaScript</span>
+            </div>
+        </section>
+
+        <section class="quick-start">
+            <h3>快速开始</h3>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>创建任务</h4>
+                        <p>访问<a href="/tasks">任务管理</a>页面，创建和管理您的任务</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>上传文件</h4>
+                        <p>访问<a href="/files">文件管理</a>页面，上传和下载文件</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>实时监控</h4>
+                        <p>访问<a href="/monitor">实时监控</a>页面，查看系统状态</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>TaskHub - Go 语言学习项目 | 演示 SQLite、文件操作、SSE 和协程</p>
+        </div>
+    </footer>
+</body>
+</html>

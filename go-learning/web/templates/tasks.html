@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务管理 - TaskHub</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <h1>TaskHub</h1>
+            <ul class="nav-links">
+                <li><a href="/">首页</a></li>
+                <li><a href="/tasks" class="active">任务管理</a></li>
+                <li><a href="/files">文件管理</a></li>
+                <li><a href="/monitor">实时监控</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        <h2>任务管理</h2>
+
+        <!-- 创建任务表单 -->
+        <section class="form-section">
+            <h3>创建新任务</h3>
+            <form id="task-form">
+                <div class="form-group">
+                    <label for="title">任务标题 *</label>
+                    <input type="text" id="title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">任务描述</label>
+                    <textarea id="description" name="description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="priority">优先级</label>
+                    <select id="priority" name="priority">
+                        <option value="1">低</option>
+                        <option value="2">较低</option>
+                        <option value="3" selected>中</option>
+                        <option value="4">较高</option>
+                        <option value="5">高</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">创建任务</button>
+            </form>
+        </section>
+
+        <!-- 任务列表 -->
+        <section class="table-section">
+            <div class="section-header">
+                <h3>任务列表</h3>
+                <button onclick="loadTasks()" class="btn btn-secondary">刷新</button>
+            </div>
+            <table id="task-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>标题</th>
+                        <th>描述</th>
+                        <th>状态</th>
+                        <th>优先级</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="task-list">
+                    <tr>
+                        <td colspan="7" class="loading">加载中...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>TaskHub - Go 语言学习项目</p>
+        </div>
+    </footer>
+
+    <script>
+        // 加载任务列表
+        async function loadTasks() {
+            try {
+                const response = await fetch('/api/tasks');
+                const tasks = await response.json();
+
+                const tbody = document.getElementById('task-list');
+
+                if (tasks.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="empty">暂无任务</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = tasks.map(task => `
+                    <tr>
+                        <td>${task.id}</td>
+                        <td><strong>${task.title}</strong></td>
+                        <td>${task.description || '-'}</td>
+                        <td><span class="status status-${task.status}">${getStatusText(task.status)}</span></td>
+                        <td>${getPriorityText(task.priority)}</td>
+                        <td>${formatDate(task.created_at)}</td>
+                        <td class="actions">
+                            ${task.status === 'pending' ?
+                                `<button onclick="processTask(${task.id})" class="btn-small btn-success">处理</button>` :
+                                ''}
+                            <button onclick="deleteTask(${task.id})" class="btn-small btn-danger">删除</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('加载任务失败:', error);
+                alert('加载任务失败');
+            }
+        }
+
+        // 创建任务
+        document.getElementById('task-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = {
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                priority: parseInt(document.getElementById('priority').value),
+                status: 'pending'
+            };
+
+            try {
+                const response = await fetch('/api/tasks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    alert('任务创建成功');
+                    document.getElementById('task-form').reset();
+                    loadTasks();
+                } else {
+                    alert('任务创建失败');
+                }
+            } catch (error) {
+                console.error('创建任务失败:', error);
+                alert('创建任务失败');
+            }
+        });
+
+        // 处理任务（提交到 Worker Pool）
+        async function processTask(id) {
+            if (!confirm('确定要处理这个任务吗？任务将提交到后台 Worker Pool 异步处理。')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/tasks/${id}/process`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    alert('任务已提交到后台处理（Worker Pool）\n可以在实时监控页面查看处理进度');
+                    setTimeout(loadTasks, 1000);
+                } else {
+                    alert('提交任务失败');
+                }
+            } catch (error) {
+                console.error('处理任务失败:', error);
+                alert('处理任务失败');
+            }
+        }
+
+        // 删除任务
+        async function deleteTask(id) {
+            if (!confirm('确定要删除这个任务吗？')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/tasks/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('任务已删除');
+                    loadTasks();
+                } else {
+                    alert('删除任务失败');
+                }
+            } catch (error) {
+                console.error('删除任务失败:', error);
+                alert('删除任务失败');
+            }
+        }
+
+        // 辅助函数
+        function getStatusText(status) {
+            const statusMap = {
+                'pending': '待处理',
+                'processing': '处理中',
+                'completed': '已完成',
+                'failed': '失败'
+            };
+            return statusMap[status] || status;
+        }
+
+        function getPriorityText(priority) {
+            const priorityMap = {
+                1: '低',
+                2: '较低',
+                3: '中',
+                4: '较高',
+                5: '高'
+            };
+            return priorityMap[priority] || priority;
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString('zh-CN');
+        }
+
+        // 页面加载时获取任务列表
+        loadTasks();
+    </script>
+</body>
+</html>

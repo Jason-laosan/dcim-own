@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实时监控 - TaskHub</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <h1>TaskHub</h1>
+            <ul class="nav-links">
+                <li><a href="/">首页</a></li>
+                <li><a href="/tasks">任务管理</a></li>
+                <li><a href="/files">文件管理</a></li>
+                <li><a href="/monitor" class="active">实时监控</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        <h2>实时监控（SSE 演示）</h2>
+        <p class="subtitle">使用 Server-Sent Events 实时推送系统状态和任务信息</p>
+
+        <!-- 连接状态 -->
+        <section class="status-section">
+            <div class="connection-status">
+                <span id="connection-indicator" class="indicator disconnected"></span>
+                <span id="connection-text">未连接</span>
+            </div>
+        </section>
+
+        <!-- 系统统计 -->
+        <section class="stats-section">
+            <h3>系统统计</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">🔄</div>
+                    <div class="stat-content">
+                        <h4>协程数量</h4>
+                        <p id="goroutines" class="stat-value">-</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💾</div>
+                    <div class="stat-content">
+                        <h4>内存使用</h4>
+                        <p id="memory" class="stat-value">-</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🗑️</div>
+                    <div class="stat-content">
+                        <h4>GC 次数</h4>
+                        <p id="gc-count" class="stat-value">-</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⚡</div>
+                    <div class="stat-content">
+                        <h4>处理中任务</h4>
+                        <p id="processing-tasks" class="stat-value">-</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 任务统计 -->
+        <section class="stats-section">
+            <h3>任务统计</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📋</div>
+                    <div class="stat-content">
+                        <h4>待处理</h4>
+                        <p id="pending-count" class="stat-value">-</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⏳</div>
+                    <div class="stat-content">
+                        <h4>处理中</h4>
+                        <p id="processing-count" class="stat-value">-</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-content">
+                        <h4>已完成</h4>
+                        <p id="completed-count" class="stat-value">-</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 事件日志 -->
+        <section class="log-section">
+            <div class="section-header">
+                <h3>事件日志</h3>
+                <button onclick="clearLog()" class="btn btn-secondary">清空</button>
+            </div>
+            <div id="event-log" class="event-log"></div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>TaskHub - Go 语言学习项目</p>
+        </div>
+    </footer>
+
+    <script>
+        let systemEventSource = null;
+        let taskEventSource = null;
+        const maxLogEntries = 50;
+
+        // 连接到系统状态 SSE
+        function connectSystemSSE() {
+            if (systemEventSource) {
+                systemEventSource.close();
+            }
+
+            systemEventSource = new EventSource('/api/sse/system');
+
+            systemEventSource.onopen = function() {
+                updateConnectionStatus(true);
+                addLog('系统状态 SSE 连接成功', 'success');
+            };
+
+            systemEventSource.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+
+                    document.getElementById('goroutines').textContent = data.goroutines || '-';
+                    document.getElementById('memory').textContent = (data.memory_mb || 0) + ' MB';
+                    document.getElementById('gc-count').textContent = data.gc_count || '-';
+                    document.getElementById('processing-tasks').textContent = data.processing_tasks || '0';
+
+                    addLog(`系统状态更新: 协程=${data.goroutines}, 内存=${data.memory_mb}MB`, 'info');
+                } catch (error) {
+                    console.error('解析系统状态数据失败:', error);
+                }
+            };
+
+            systemEventSource.onerror = function(error) {
+                console.error('系统状态 SSE 连接错误:', error);
+                updateConnectionStatus(false);
+                addLog('系统状态 SSE 连接断开，5秒后重连...', 'error');
+
+                setTimeout(() => {
+                    connectSystemSSE();
+                }, 5000);
+            };
+        }
+
+        // 连接到任务状态 SSE
+        function connectTaskSSE() {
+            if (taskEventSource) {
+                taskEventSource.close();
+            }
+
+            taskEventSource = new EventSource('/api/sse/tasks');
+
+            taskEventSource.onopen = function() {
+                addLog('任务状态 SSE 连接成功', 'success');
+            };
+
+            taskEventSource.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+
+                    document.getElementById('pending-count').textContent = data.pending_count || '0';
+                    document.getElementById('processing-count').textContent = data.processing_count || '0';
+                    document.getElementById('completed-count').textContent = data.completed_count || '0';
+
+                    addLog(`任务状态更新: 待处理=${data.pending_count}, 处理中=${data.processing_count}, 已完成=${data.completed_count}`, 'info');
+                } catch (error) {
+                    console.error('解析任务状态数据失败:', error);
+                }
+            };
+
+            taskEventSource.onerror = function(error) {
+                console.error('任务状态 SSE 连接错误:', error);
+                addLog('任务状态 SSE 连接断开，5秒后重连...', 'error');
+
+                setTimeout(() => {
+                    connectTaskSSE();
+                }, 5000);
+            };
+        }
+
+        // 更新连接状态
+        function updateConnectionStatus(connected) {
+            const indicator = document.getElementById('connection-indicator');
+            const text = document.getElementById('connection-text');
+
+            if (connected) {
+                indicator.className = 'indicator connected';
+                text.textContent = '已连接';
+            } else {
+                indicator.className = 'indicator disconnected';
+                text.textContent = '未连接';
+            }
+        }
+
+        // 添加日志
+        function addLog(message, type = 'info') {
+            const log = document.getElementById('event-log');
+            const timestamp = new Date().toLocaleTimeString('zh-CN');
+
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.innerHTML = `<span class="log-time">${timestamp}</span> <span class="log-message">${message}</span>`;
+
+            log.insertBefore(entry, log.firstChild);
+
+            // 限制日志条目数量
+            while (log.children.length > maxLogEntries) {
+                log.removeChild(log.lastChild);
+            }
+        }
+
+        // 清空日志
+        function clearLog() {
+            document.getElementById('event-log').innerHTML = '';
+            addLog('日志已清空', 'info');
+        }
+
+        // 页面加载时连接 SSE
+        window.addEventListener('load', () => {
+            connectSystemSSE();
+            connectTaskSSE();
+        });
+
+        // 页面卸载时关闭连接
+        window.addEventListener('beforeunload', () => {
+            if (systemEventSource) {
+                systemEventSource.close();
+            }
+            if (taskEventSource) {
+                taskEventSource.close();
+            }
+        });
+    </script>
+</body>
+</html>
