@@ -35,17 +35,16 @@ batch:
   flush_timeout: 5                  # Flush timeout (seconds)
   concurrent_flushes: 4             # Parallel flush workers
 
-influxdb:
-  url: "http://localhost:8086"
-  token: "your-influxdb-token-here"
-  org: "opc-monitoring"
-  bucket: "opc-metrics"
-  batch_size: 5000                  # Points per write batch
-  flush_interval: 10                # seconds
-  retry_interval: 5                 # seconds
+kafka:
+  brokers:
+    - "localhost:9092"
+    - "localhost:9093"
+    - "localhost:9094"
+  topic: "opc-metrics"
   max_retries: 3
-  max_connections: 10
+  retry_interval: 5                 # seconds
   timeout: 30                       # seconds
+  compression: "snappy"             # none, gzip, snappy, lz4, zstd
 
 cache:
   path: "/var/lib/opc-collector/cache"

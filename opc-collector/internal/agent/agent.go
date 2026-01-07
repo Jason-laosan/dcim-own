@@ -26,19 +26,19 @@ import (
 
 // Agent is the main orchestrator for the OPC collector
 type Agent struct {
-	config       *config.Config
-	devices      []*models.OPCDevice
-	protocols    map[models.OPCProtocol]protocol.Protocol
-	workerPool   *collector.WorkerPool
-	scheduler    *scheduler.Scheduler
-	batcher      *batch.Batcher
-	influxWriter *storage.BatchWriter
-	cache        *cache.Cache
-	startTime    time.Time
-	ctx          context.Context
-	cancel       context.CancelFunc
-	wg           sync.WaitGroup
-	logger       *zap.Logger
+	config        *config.Config
+	devices       []*models.OPCDevice
+	protocols     map[models.OPCProtocol]protocol.Protocol
+	workerPool    *collector.WorkerPool
+	scheduler     *scheduler.Scheduler
+	batcher       *batch.Batcher
+	kafkaProducer *storage.KafkaProducer
+	cache         *cache.Cache
+	startTime     time.Time
+	ctx           context.Context
+	cancel        context.CancelFunc
+	wg            sync.WaitGroup
+	logger        *zap.Logger
 }
 
 // NewAgent creates a new agent
@@ -77,12 +77,12 @@ func (a *Agent) initializeComponents() error {
 		return fmt.Errorf("initialize protocols: %w", err)
 	}
 
-	// Initialize InfluxDB writer
-	influxWriter, err := storage.NewBatchWriter(a.config.InfluxDB)
+	// Initialize Kafka producer
+	kafkaProducer, err := storage.NewKafkaProducer(a.config.Kafka)
 	if err != nil {
-		return fmt.Errorf("create influxdb writer: %w", err)
+		return fmt.Errorf("create kafka producer: %w", err)
 	}
-	a.influxWriter = influxWriter
+	a.kafkaProducer = kafkaProducer
 
 	// Initialize local cache
 	cache, err := cache.NewCache(a.config.Cache)
@@ -92,7 +92,7 @@ func (a *Agent) initializeComponents() error {
 	a.cache = cache
 
 	// Initialize batcher
-	a.batcher = batch.NewBatcher(a.config.Batch, influxWriter)
+	a.batcher = batch.NewBatcher(a.config.Batch, kafkaProducer)
 
 	// Initialize worker pool
 	queueSize := a.config.Agent.MaxDevices * 2
@@ -319,9 +319,9 @@ func (a *Agent) Stop() {
 		}
 	}
 
-	// Close InfluxDB writer
-	if a.influxWriter != nil {
-		a.influxWriter.Close()
+	// Close Kafka producer
+	if a.kafkaProducer != nil {
+		a.kafkaProducer.Close()
 	}
 
 	// Close cache

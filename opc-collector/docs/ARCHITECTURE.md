@@ -2,7 +2,7 @@
 
 ## Overview
 
-The OPC Collector is a high-performance, scalable system designed to collect data from 1.2 million OPC servers with 10-second collection intervals, achieving approximately 600,000 points per second write throughput to InfluxDB.
+The OPC Collector is a high-performance, scalable system designed to collect data from 1.2 million OPC servers with 10-second collection intervals, achieving approximately 600,000 messages per second throughput to Kafka.
 
 ## System Architecture
 
@@ -52,10 +52,10 @@ The OPC Collector is a high-performance, scalable system designed to collect dat
 └─────────────────────────────────────────────────────────────────┘
                              ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│                  InfluxDB Cluster (3-5 nodes)                    │
-│  - Batch writes (5K points per batch)                           │
-│  - ~600K points/second total throughput                         │
-│  - 30-day retention with downsampling                           │
+│                    Kafka Cluster (3-5 brokers)                   │
+│  - Batch writes (JSON messages)                                 │
+│  - ~600K messages/second total throughput                       │
+│  - Configurable retention and partitioning                      │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -113,18 +113,18 @@ The OPC Collector is a high-performance, scalable system designed to collect dat
 
 ### 5. Storage Layer
 
-**InfluxDB Batch Writer** (`internal/storage/batch_writer.go`)
-- Batch size: 5,000 points per write
+**Kafka Producer** (`internal/storage/kafka_producer.go`)
+- JSON message serialization
 - Retry logic with exponential backoff
-- Connection pooling (10 connections)
-- Line protocol optimization
+- Snappy compression
+- Partitioning by device ID
 - Error handling with cache fallback
 
 **Local Cache** (`internal/cache/cache.go`)
 - Badger DB for persistence
 - Write-ahead logging for failed writes
 - 24-hour TTL
-- Background replay on recovery
+- Background replay to Kafka on recovery
 - Automatic garbage collection
 
 ### 6. Monitoring
@@ -134,7 +134,7 @@ The OPC Collector is a high-performance, scalable system designed to collect dat
 - Worker pool statistics
 - Connection pool utilization
 - Batch processing metrics
-- InfluxDB write performance
+- Kafka write performance
 - Circuit breaker states
 - Memory and CPU metrics
 
@@ -157,14 +157,14 @@ The OPC Collector is a high-performance, scalable system designed to collect dat
    - Flushes on timer (10s) or size/memory threshold
 
 4. **Storage**
-   - Converts metrics to InfluxDB line protocol
-   - Writes in batches of 5,000 points
+   - Converts metrics to JSON format
+   - Sends messages to Kafka topic
    - Retries on failure (up to 3 times)
    - Falls back to local cache on persistent failure
 
 5. **Recovery**
    - Background process monitors cache
-   - Replays cached data when InfluxDB recovers
+   - Replays cached data when Kafka recovers
    - Automatic cleanup after successful replay
 
 ## Scalability
@@ -181,18 +181,19 @@ The OPC Collector is a high-performance, scalable system designed to collect dat
 - **Distribution**: Geographic or protocol-based
 - **Coordination**: Stateless agents, no coordination needed
 
-### InfluxDB Scaling
-- **Write Rate**: ~600,000 points/second
-- **Cluster**: 3-5 nodes recommended
-- **Storage**: 2-4 TB NVMe SSD per node
-- **Retention**: 30 days with continuous queries for downsampling
+### Kafka Scaling
+- **Write Rate**: ~600,000 messages/second
+- **Cluster**: 3-5 brokers recommended
+- **Storage**: 2-4 TB NVMe SSD per broker
+- **Retention**: Configurable (7-30 days typical)
+- **Partitions**: 50-100 partitions for parallelism
 
 ## Performance Characteristics
 
 ### Throughput
 - **Per Agent**: ~1,000 collections/second (10s interval, 2K devices)
-- **Total System**: ~600,000 points/second (600 agents × 1K points/s)
-- **InfluxDB Write**: 5,000 points per batch, ~120 batches/second
+- **Total System**: ~600,000 messages/second (600 agents × 1K messages/s)
+- **Kafka Write**: JSON messages with snappy compression
 
 ### Latency
 - **Collection**: < 100ms average (OPC UA bulk read)
@@ -203,7 +204,7 @@ The OPC Collector is a high-performance, scalable system designed to collect dat
 - **CPU**: 40-60% under normal load (8 cores)
 - **Memory**: 8-16 GB steady state (with GC tuning)
 - **Network**: ~10 Mbps per agent (depends on metric count)
-- **Disk I/O**: Minimal (cache writes only on InfluxDB failure)
+- **Disk I/O**: Minimal (cache writes only on Kafka failure)
 
 ## Reliability
 
@@ -211,7 +212,7 @@ The OPC Collector is a high-performance, scalable system designed to collect dat
 - **Circuit Breakers**: Isolate unhealthy devices
 - **Connection Pooling**: Automatic reconnection on failure
 - **Retry Logic**: Exponential backoff for transient failures
-- **Local Cache**: Data preservation during InfluxDB downtime
+- **Local Cache**: Data preservation during Kafka downtime
 
 ### High Availability
 - **Stateless Agents**: No single point of failure
@@ -248,9 +249,9 @@ batch:
   interval: 5                   # Faster flushing
   max_size: 5000                # Smaller batches
 
-influxdb:
-  batch_size: 2000              # Smaller writes
-  max_connections: 20           # More parallel writes
+kafka:
+  timeout: 10                   # Faster timeout
+  compression: "lz4"            # Faster compression
 ```
 
 ### Memory Constrained
@@ -283,8 +284,8 @@ connection_pool:
 - Secret management (Kubernetes Secrets)
 
 ### Data Security
-- Encrypted InfluxDB connections (TLS)
-- Token-based authentication
+- Encrypted Kafka connections (TLS)
+- SASL authentication support
 - RBAC for Kubernetes resources
 
 ## Monitoring & Observability
@@ -303,7 +304,7 @@ connection_pool:
 
 ### Health Checks
 - Liveness probe: Metrics endpoint availability
-- Readiness probe: InfluxDB connectivity
+- Readiness probe: Kafka connectivity
 - Startup probe: Initial device load
 
 ## Future Enhancements
@@ -318,7 +319,7 @@ connection_pool:
 7. Advanced circuit breaker strategies
 8. Auto-scaling based on queue depth
 9. Real-time anomaly detection
-10. Multi-destination routing (Kafka, etc.)
+10. Multi-destination routing (multiple Kafka topics, etc.)
 
 ### Performance Improvements
 1. Connection multiplexing

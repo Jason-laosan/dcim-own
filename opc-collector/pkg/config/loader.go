@@ -67,18 +67,12 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("batch.max_size must be positive")
 	}
 
-	// InfluxDB validation
-	if c.InfluxDB.URL == "" {
-		return fmt.Errorf("influxdb.url is required")
+	// Kafka validation
+	if len(c.Kafka.Brokers) == 0 {
+		return fmt.Errorf("kafka.brokers is required")
 	}
-	if c.InfluxDB.Token == "" {
-		return fmt.Errorf("influxdb.token is required")
-	}
-	if c.InfluxDB.Org == "" {
-		return fmt.Errorf("influxdb.org is required")
-	}
-	if c.InfluxDB.Bucket == "" {
-		return fmt.Errorf("influxdb.bucket is required")
+	if c.Kafka.Topic == "" {
+		return fmt.Errorf("kafka.topic is required")
 	}
 
 	// Cache validation

@@ -1,13 +1,13 @@
 # OPC Collector - High-Scale Data Collection System
 
-A high-performance OPC data collection system designed to handle 1.2 million OPC servers with 10-second collection intervals, writing to InfluxDB in batches.
+A high-performance OPC data collection system designed to handle 1.2 million OPC servers with 10-second collection intervals, sending data to Kafka in batches.
 
 ## Features
 
 - **Massive Scale**: Handles 1.2M OPC servers @ 10s intervals (~600K points/second)
 - **Multi-Protocol**: Supports OPC UA, OPC DA (via gateway), and Gateway protocols
 - **High Concurrency**: 2,000 concurrent connections per agent using worker pools
-- **Batch Processing**: 10-second batch aggregation to InfluxDB
+- **Batch Processing**: 10-second batch aggregation to Kafka
 - **Resilience**: Local Badger DB cache for offline resilience
 - **Fault Tolerance**: Per-device circuit breakers
 - **Monitoring**: Prometheus metrics and Grafana dashboards
@@ -17,7 +17,7 @@ A high-performance OPC data collection system designed to handle 1.2 million OPC
 ```
 Configuration Files
         ↓
-Collector Agents (600 instances) → InfluxDB Cluster
+Collector Agents (600 instances) → Kafka Cluster
   - Connection Pools (UA/DA/Gateway)
   - Worker Pool (100 workers/agent)
   - 10s Batch Aggregator
@@ -29,7 +29,7 @@ Collector Agents (600 instances) → InfluxDB Cluster
 ### Prerequisites
 
 - Go 1.21+
-- InfluxDB 2.x
+- Kafka cluster
 - Optional: Kubernetes cluster for deployment
 
 ### Build

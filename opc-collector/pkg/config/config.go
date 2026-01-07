@@ -9,7 +9,7 @@ type Config struct {
 	Agent          AgentConfig          `yaml:"agent"`
 	ConnectionPool ConnectionPoolConfig `yaml:"connection_pool"`
 	Batch          BatchConfig          `yaml:"batch"`
-	InfluxDB       InfluxDBConfig       `yaml:"influxdb"`
+	Kafka          KafkaConfig          `yaml:"kafka"`
 	Cache          CacheConfig          `yaml:"cache"`
 	CircuitBreaker CircuitBreakerConfig `yaml:"circuit_breaker"`
 	Monitoring     MonitoringConfig     `yaml:"monitoring"`
@@ -56,18 +56,14 @@ type BatchConfig struct {
 	ConcurrentFlushes int `yaml:"concurrent_flushes"` // parallel flush workers
 }
 
-// InfluxDBConfig holds InfluxDB connection configuration
-type InfluxDBConfig struct {
-	URL            string `yaml:"url"`
-	Token          string `yaml:"token"`
-	Org            string `yaml:"org"`
-	Bucket         string `yaml:"bucket"`
-	BatchSize      int    `yaml:"batch_size"`
-	FlushInterval  int    `yaml:"flush_interval"` // seconds
-	RetryInterval  int    `yaml:"retry_interval"` // seconds
-	MaxRetries     int    `yaml:"max_retries"`
-	MaxConnections int    `yaml:"max_connections"`
-	Timeout        int    `yaml:"timeout"` // seconds
+// KafkaConfig holds Kafka connection configuration
+type KafkaConfig struct {
+	Brokers       []string `yaml:"brokers"`
+	Topic         string   `yaml:"topic"`
+	MaxRetries    int      `yaml:"max_retries"`
+	RetryInterval int      `yaml:"retry_interval"` // seconds
+	Timeout       int      `yaml:"timeout"`        // seconds
+	Compression   string   `yaml:"compression"`    // none, gzip, snappy, lz4, zstd
 }
 
 // CacheConfig holds local cache configuration
@@ -186,13 +182,13 @@ func DefaultConfig() *Config {
 			FlushTimeout:      5,
 			ConcurrentFlushes: 4,
 		},
-		InfluxDB: InfluxDBConfig{
-			BatchSize:      5000,
-			FlushInterval:  10,
-			RetryInterval:  5,
-			MaxRetries:     3,
-			MaxConnections: 10,
-			Timeout:        30,
+		Kafka: KafkaConfig{
+			Brokers:       []string{"localhost:9092"},
+			Topic:         "opc-metrics",
+			MaxRetries:    3,
+			RetryInterval: 5,
+			Timeout:       30,
+			Compression:   "snappy",
 		},
 		Cache: CacheConfig{
 			MaxSizeGB:  10,

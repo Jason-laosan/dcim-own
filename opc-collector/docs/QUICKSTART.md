@@ -5,7 +5,7 @@ This guide will help you get the OPC Collector up and running quickly.
 ## Prerequisites
 
 - Go 1.21 or later
-- InfluxDB 2.x instance
+- Kafka cluster
 - OPC UA servers to collect from
 
 ## Step 1: Configuration
@@ -17,9 +17,8 @@ cp configs/machines.yaml.example configs/machines.yaml
 ```
 
 2. Edit `configs/config.yaml`:
-   - Update `influxdb.url` with your InfluxDB URL
-   - Update `influxdb.token` with your InfluxDB token
-   - Update `influxdb.org` and `influxdb.bucket` as needed
+   - Update `kafka.brokers` with your Kafka broker addresses
+   - Update `kafka.topic` with your target topic (default: opc-metrics)
    - Adjust `agent.max_concurrency` based on your hardware (default: 100)
    - Adjust `agent.max_devices` based on device count (default: 2000)
 
@@ -85,10 +84,10 @@ make run
 curl http://localhost:9090/metrics
 ```
 
-3. Verify data in InfluxDB:
+3. Verify data in Kafka:
 ```bash
-# Using InfluxDB CLI
-influx query 'from(bucket:"opc-metrics") |> range(start: -5m)'
+# Using Kafka console consumer
+kafka-console-consumer --bootstrap-server localhost:9092 --topic opc-metrics --from-beginning
 ```
 
 ## Monitoring
@@ -100,7 +99,7 @@ Key metrics to monitor:
 - `opc_collection_duration_seconds` - Collection latency
 - `opc_worker_pool_active_workers` - Active workers
 - `opc_batch_flush_duration_seconds` - Batch write performance
-- `opc_influxdb_points_written_total` - Points written to InfluxDB
+- `opc_kafka_messages_sent_total` - Messages sent to Kafka
 
 ## Docker Deployment
 
@@ -163,10 +162,10 @@ kubectl scale statefulset opc-collector --replicas=600 -n opc-system
 - Check `opc_collection_duration_seconds` metric
 - Verify network latency to OPC servers
 
-### InfluxDB write errors
-- Check `opc_influxdb_write_errors_total` metric
-- Verify InfluxDB token and permissions
-- Check InfluxDB capacity
+### Kafka write errors
+- Check `opc_kafka_write_errors_total` metric
+- Verify Kafka broker connectivity
+- Check Kafka topic configuration and capacity
 
 ### Connection pool exhausted
 - Increase `connection_pool.opcua.max_open`
