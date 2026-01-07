@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
 
-	"github.com/yourusername/opc-collector/pkg/config"
+	"opc-collector/pkg/config"
 )
 
 // Log is the global logger instance
@@ -49,10 +49,10 @@ func Init(cfg config.LoggingConfig) error {
 		// File output with rotation
 		writer = zapcore.AddSync(&lumberjack.Logger{
 			Filename:   cfg.Output,
-			MaxSize:    cfg.MaxSizeMB,    // megabytes
-			MaxBackups: cfg.MaxBackups,   // number of backups
-			MaxAge:     cfg.MaxAgeDays,   // days
-			Compress:   true,             // compress rotated files
+			MaxSize:    cfg.MaxSizeMB,  // megabytes
+			MaxBackups: cfg.MaxBackups, // number of backups
+			MaxAge:     cfg.MaxAgeDays, // days
+			Compress:   true,           // compress rotated files
 		})
 	}
 

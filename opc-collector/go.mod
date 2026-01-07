@@ -1,4 +1,4 @@
-module github.com/yourusername/opc-collector
+module opc-collector
 
 go 1.25.5
 

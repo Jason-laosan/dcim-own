@@ -9,10 +9,10 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/yourusername/opc-collector/internal/agent"
-	"github.com/yourusername/opc-collector/pkg/config"
-	"github.com/yourusername/opc-collector/pkg/logger"
-	"github.com/yourusername/opc-collector/pkg/models"
+	"opc-collector/internal/agent"
+	"opc-collector/pkg/config"
+	"opc-collector/pkg/logger"
+	"opc-collector/pkg/models"
 )
 
 var (

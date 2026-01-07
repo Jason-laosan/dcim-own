@@ -3,7 +3,7 @@ package protocol
 import (
 	"context"
 
-	"github.com/yourusername/opc-collector/pkg/models"
+	"opc-collector/pkg/models"
 )
 
 // Protocol defines the interface that all OPC protocol implementations must satisfy

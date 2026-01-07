@@ -8,9 +8,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/yourusername/opc-collector/internal/protocol"
-	"github.com/yourusername/opc-collector/pkg/logger"
-	"github.com/yourusername/opc-collector/pkg/models"
+	"opc-collector/internal/protocol"
+	"opc-collector/pkg/logger"
+	"opc-collector/pkg/models"
 )
 
 var (
@@ -22,29 +22,29 @@ var (
 
 // WorkerPool manages concurrent collection tasks using a semaphore pattern
 type WorkerPool struct {
-	workerCount  int
-	queueSize    int
-	taskQueue    chan *models.CollectionTask
-	resultQueue  chan *models.MetricData
-	errorQueue   chan *TaskError
-	semaphore    chan struct{}
-	protocols    map[models.OPCProtocol]protocol.Protocol
-	wg           sync.WaitGroup
-	ctx          context.Context
-	cancel       context.CancelFunc
-	logger       *zap.Logger
-	statsmu      sync.RWMutex
-	stats        WorkerPoolStats
+	workerCount int
+	queueSize   int
+	taskQueue   chan *models.CollectionTask
+	resultQueue chan *models.MetricData
+	errorQueue  chan *TaskError
+	semaphore   chan struct{}
+	protocols   map[models.OPCProtocol]protocol.Protocol
+	wg          sync.WaitGroup
+	ctx         context.Context
+	cancel      context.CancelFunc
+	logger      *zap.Logger
+	statsmu     sync.RWMutex
+	stats       WorkerPoolStats
 }
 
 // WorkerPoolStats holds worker pool statistics
 type WorkerPoolStats struct {
-	TasksSubmitted  int64
-	TasksCompleted  int64
-	TasksFailed     int64
-	TotalDuration   time.Duration
-	ActiveWorkers   int
-	QueuedTasks     int
+	TasksSubmitted int64
+	TasksCompleted int64
+	TasksFailed    int64
+	TotalDuration  time.Duration
+	ActiveWorkers  int
+	QueuedTasks    int
 }
 
 // TaskError represents an error that occurred during task execution

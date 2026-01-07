@@ -1,6 +1,8 @@
 package config
 
-import "github.com/yourusername/opc-collector/pkg/models"
+import (
+	"opc-collector/pkg/models"
+)
 
 // Config represents the complete configuration for the OPC collector agent
 type Config struct {
@@ -47,10 +49,10 @@ type PoolConfig struct {
 
 // BatchConfig holds batch processing configuration
 type BatchConfig struct {
-	Interval         int `yaml:"interval"`          // seconds
-	MaxSize          int `yaml:"max_size"`          // max points per batch
-	MaxMemoryMB      int `yaml:"max_memory_mb"`     // max memory for buffer
-	FlushTimeout     int `yaml:"flush_timeout"`     // seconds
+	Interval          int `yaml:"interval"`           // seconds
+	MaxSize           int `yaml:"max_size"`           // max points per batch
+	MaxMemoryMB       int `yaml:"max_memory_mb"`      // max memory for buffer
+	FlushTimeout      int `yaml:"flush_timeout"`      // seconds
 	ConcurrentFlushes int `yaml:"concurrent_flushes"` // parallel flush workers
 }
 
@@ -61,8 +63,8 @@ type InfluxDBConfig struct {
 	Org            string `yaml:"org"`
 	Bucket         string `yaml:"bucket"`
 	BatchSize      int    `yaml:"batch_size"`
-	FlushInterval  int    `yaml:"flush_interval"`  // seconds
-	RetryInterval  int    `yaml:"retry_interval"`  // seconds
+	FlushInterval  int    `yaml:"flush_interval"` // seconds
+	RetryInterval  int    `yaml:"retry_interval"` // seconds
 	MaxRetries     int    `yaml:"max_retries"`
 	MaxConnections int    `yaml:"max_connections"`
 	Timeout        int    `yaml:"timeout"` // seconds
@@ -78,11 +80,11 @@ type CacheConfig struct {
 
 // CircuitBreakerConfig holds circuit breaker configuration
 type CircuitBreakerConfig struct {
-	Enabled            bool `yaml:"enabled"`
-	FailureThreshold   int  `yaml:"failure_threshold"`
-	SuccessThreshold   int  `yaml:"success_threshold"`
-	Timeout            int  `yaml:"timeout"`                 // seconds
-	HalfOpenMaxRequests int `yaml:"half_open_max_requests"`
+	Enabled             bool `yaml:"enabled"`
+	FailureThreshold    int  `yaml:"failure_threshold"`
+	SuccessThreshold    int  `yaml:"success_threshold"`
+	Timeout             int  `yaml:"timeout"` // seconds
+	HalfOpenMaxRequests int  `yaml:"half_open_max_requests"`
 }
 
 // MonitoringConfig holds monitoring configuration
@@ -106,20 +108,20 @@ type PprofConfig struct {
 
 // LoggingConfig holds logging configuration
 type LoggingConfig struct {
-	Level       string `yaml:"level"`        // debug, info, warn, error
-	Format      string `yaml:"format"`       // json, console
-	Output      string `yaml:"output"`       // file path or stdout
-	MaxSizeMB   int    `yaml:"max_size_mb"`
-	MaxBackups  int    `yaml:"max_backups"`
-	MaxAgeDays  int    `yaml:"max_age_days"`
+	Level      string `yaml:"level"`  // debug, info, warn, error
+	Format     string `yaml:"format"` // json, console
+	Output     string `yaml:"output"` // file path or stdout
+	MaxSizeMB  int    `yaml:"max_size_mb"`
+	MaxBackups int    `yaml:"max_backups"`
+	MaxAgeDays int    `yaml:"max_age_days"`
 }
 
 // DevicesConfig holds device configuration source settings
 type DevicesConfig struct {
-	Source   string            `yaml:"source"` // file, database, etcd
-	File     FileSourceConfig  `yaml:"file"`
-	Database DBSourceConfig    `yaml:"database"`
-	Etcd     EtcdSourceConfig  `yaml:"etcd"`
+	Source   string           `yaml:"source"` // file, database, etcd
+	File     FileSourceConfig `yaml:"file"`
+	Database DBSourceConfig   `yaml:"database"`
+	Etcd     EtcdSourceConfig `yaml:"etcd"`
 }
 
 // FileSourceConfig holds file-based device configuration
@@ -178,10 +180,10 @@ func DefaultConfig() *Config {
 			},
 		},
 		Batch: BatchConfig{
-			Interval:         10,
-			MaxSize:          10000,
-			MaxMemoryMB:      256,
-			FlushTimeout:     5,
+			Interval:          10,
+			MaxSize:           10000,
+			MaxMemoryMB:       256,
+			FlushTimeout:      5,
 			ConcurrentFlushes: 4,
 		},
 		InfluxDB: InfluxDBConfig{
@@ -198,10 +200,10 @@ func DefaultConfig() *Config {
 			GCInterval: 3600,
 		},
 		CircuitBreaker: CircuitBreakerConfig{
-			Enabled:            true,
-			FailureThreshold:   5,
-			SuccessThreshold:   2,
-			Timeout:            60,
+			Enabled:             true,
+			FailureThreshold:    5,
+			SuccessThreshold:    2,
+			Timeout:             60,
 			HalfOpenMaxRequests: 3,
 		},
 		Monitoring: MonitoringConfig{

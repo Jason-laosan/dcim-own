@@ -8,9 +8,9 @@ import (
 	badger "github.com/dgraph-io/badger/v4"
 	"go.uber.org/zap"
 
-	"github.com/yourusername/opc-collector/pkg/config"
-	"github.com/yourusername/opc-collector/pkg/logger"
-	"github.com/yourusername/opc-collector/pkg/models"
+	"opc-collector/pkg/config"
+	"opc-collector/pkg/logger"
+	"opc-collector/pkg/models"
 )
 
 // Cache provides local persistent storage using Badger DB

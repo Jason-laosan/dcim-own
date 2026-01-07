@@ -7,9 +7,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/yourusername/opc-collector/pkg/config"
-	"github.com/yourusername/opc-collector/pkg/logger"
-	"github.com/yourusername/opc-collector/pkg/models"
+	"opc-collector/pkg/config"
+	"opc-collector/pkg/logger"
+	"opc-collector/pkg/models"
 )
 
 // Flusher is the interface for flushing batched data
@@ -19,28 +19,28 @@ type Flusher interface {
 
 // Batcher aggregates metrics for batch processing
 type Batcher struct {
-	interval      time.Duration
-	maxSize       int
-	maxMemoryMB   int
-	buffer        *MetricBuffer
-	flusher       Flusher
-	inputChan     chan *models.MetricData
-	ctx           context.Context
-	cancel        context.CancelFunc
-	wg            sync.WaitGroup
-	logger        *zap.Logger
-	statsmu       sync.RWMutex
-	stats         BatcherStats
+	interval    time.Duration
+	maxSize     int
+	maxMemoryMB int
+	buffer      *MetricBuffer
+	flusher     Flusher
+	inputChan   chan *models.MetricData
+	ctx         context.Context
+	cancel      context.CancelFunc
+	wg          sync.WaitGroup
+	logger      *zap.Logger
+	statsmu     sync.RWMutex
+	stats       BatcherStats
 }
 
 // BatcherStats holds batcher statistics
 type BatcherStats struct {
-	ItemsReceived   int64
-	ItemsFlushed    int64
-	FlushCount      int64
-	FlushErrors     int64
-	BufferSize      int
-	BufferMemoryMB  int64
+	ItemsReceived  int64
+	ItemsFlushed   int64
+	FlushCount     int64
+	FlushErrors    int64
+	BufferSize     int
+	BufferMemoryMB int64
 }
 
 // MetricBuffer holds metrics in memory

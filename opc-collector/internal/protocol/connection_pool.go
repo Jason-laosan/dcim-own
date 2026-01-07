@@ -7,9 +7,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/yourusername/opc-collector/pkg/config"
-	"github.com/yourusername/opc-collector/pkg/logger"
-	"github.com/yourusername/opc-collector/pkg/models"
+	"opc-collector/pkg/config"
+	"opc-collector/pkg/logger"
+	"opc-collector/pkg/models"
 )
 
 var (
@@ -21,7 +21,7 @@ var (
 
 // PooledConnection represents a connection from the pool
 type PooledConnection struct {
-	conn       interface{}   // The actual connection (OPC UA Client, etc.)
+	conn       interface{} // The actual connection (OPC UA Client, etc.)
 	deviceID   string
 	createdAt  time.Time
 	lastUsedAt time.Time
@@ -68,7 +68,7 @@ type ConnectionPool struct {
 	active      int
 	closed      bool
 
-	logger      *zap.Logger
+	logger *zap.Logger
 }
 
 // NewConnectionPool creates a new connection pool
@@ -221,11 +221,11 @@ func (p *ConnectionPool) Stats() PoolStats {
 	defer p.mu.RUnlock()
 
 	return PoolStats{
-		Active:      p.active,
-		Idle:        len(p.idle),
-		Total:       len(p.connections),
-		MaxOpen:     p.maxOpen,
-		MaxIdle:     p.maxIdle,
+		Active:  p.active,
+		Idle:    len(p.idle),
+		Total:   len(p.connections),
+		MaxOpen: p.maxOpen,
+		MaxIdle: p.maxIdle,
 	}
 }
 

@@ -7,21 +7,21 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/yourusername/opc-collector/internal/collector"
-	"github.com/yourusername/opc-collector/pkg/logger"
-	"github.com/yourusername/opc-collector/pkg/models"
+	"opc-collector/internal/collector"
+	"opc-collector/pkg/logger"
+	"opc-collector/pkg/models"
 )
 
 // Scheduler manages the scheduling of collection tasks
 type Scheduler struct {
-	tasks       map[string]*models.CollectionTask
-	workerPool  *collector.WorkerPool
-	interval    time.Duration
-	mu          sync.RWMutex
-	ctx         context.Context
-	cancel      context.CancelFunc
-	wg          sync.WaitGroup
-	logger      *zap.Logger
+	tasks      map[string]*models.CollectionTask
+	workerPool *collector.WorkerPool
+	interval   time.Duration
+	mu         sync.RWMutex
+	ctx        context.Context
+	cancel     context.CancelFunc
+	wg         sync.WaitGroup
+	logger     *zap.Logger
 }
 
 // NewScheduler creates a new scheduler

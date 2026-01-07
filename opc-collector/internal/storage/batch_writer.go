@@ -10,9 +10,9 @@ import (
 	"github.com/influxdata/influxdb-client-go/v2/api/write"
 	"go.uber.org/zap"
 
-	"github.com/yourusername/opc-collector/pkg/config"
-	"github.com/yourusername/opc-collector/pkg/logger"
-	"github.com/yourusername/opc-collector/pkg/models"
+	"opc-collector/pkg/config"
+	"opc-collector/pkg/logger"
+	"opc-collector/pkg/models"
 )
 
 // BatchWriter writes metrics to InfluxDB in batches

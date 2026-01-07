@@ -12,16 +12,16 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 
-	"github.com/yourusername/opc-collector/internal/batch"
-	"github.com/yourusername/opc-collector/internal/cache"
-	"github.com/yourusername/opc-collector/internal/collector"
-	"github.com/yourusername/opc-collector/internal/monitor"
-	"github.com/yourusername/opc-collector/internal/protocol"
-	"github.com/yourusername/opc-collector/internal/scheduler"
-	"github.com/yourusername/opc-collector/internal/storage"
-	"github.com/yourusername/opc-collector/pkg/config"
-	"github.com/yourusername/opc-collector/pkg/logger"
-	"github.com/yourusername/opc-collector/pkg/models"
+	"opc-collector/internal/batch"
+	"opc-collector/internal/cache"
+	"opc-collector/internal/collector"
+	"opc-collector/internal/monitor"
+	"opc-collector/internal/protocol"
+	"opc-collector/internal/scheduler"
+	"opc-collector/internal/storage"
+	"opc-collector/pkg/config"
+	"opc-collector/pkg/logger"
+	"opc-collector/pkg/models"
 )
 
 // Agent is the main orchestrator for the OPC collector

@@ -7,8 +7,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/yourusername/opc-collector/pkg/config"
-	"github.com/yourusername/opc-collector/pkg/logger"
+	"opc-collector/pkg/config"
+	"opc-collector/pkg/logger"
 )
 
 var (
@@ -34,13 +34,13 @@ type CircuitBreaker struct {
 	timeout             time.Duration
 	halfOpenMaxRequests int
 
-	failureCount        int
-	successCount        int
-	lastFailureTime     time.Time
-	halfOpenCount       int
+	failureCount    int
+	successCount    int
+	lastFailureTime time.Time
+	halfOpenCount   int
 
-	deviceID            string
-	logger              *zap.Logger
+	deviceID string
+	logger   *zap.Logger
 }
 
 // NewCircuitBreaker creates a new circuit breaker

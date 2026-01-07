@@ -10,9 +10,9 @@ import (
 	"github.com/gopcua/opcua/ua"
 	"go.uber.org/zap"
 
-	"github.com/yourusername/opc-collector/pkg/config"
-	"github.com/yourusername/opc-collector/pkg/logger"
-	"github.com/yourusername/opc-collector/pkg/models"
+	"opc-collector/pkg/config"
+	"opc-collector/pkg/logger"
+	"opc-collector/pkg/models"
 )
 
 // OPCUAProtocol implements the Protocol interface for OPC UA
