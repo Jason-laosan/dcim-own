@@ -1,0 +1,53 @@
+# Build artifacts
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+coverage.html
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work
+
+# IDE directories
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Configuration files (keep examples)
+config.yaml
+machines.yaml
+
+# Cache and data directories (runtime data, not source code)
+/cache/
+/data/
+*.db
+
+# Log files
+*.log
+logs/
+
+# Badger DB files
+*.vlog
+*.sst
+MANIFEST
+KEYREGISTRY
+
+# Temporary files
+tmp/
+temp/

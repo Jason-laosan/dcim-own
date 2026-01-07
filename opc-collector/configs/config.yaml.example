@@ -1,0 +1,91 @@
+agent:
+  id: "collector-agent-001"
+  name: "OPC Collector Agent 001"
+  region: "china-north"
+  datacenter: "dc-01"
+  max_concurrency: 100              # Worker pool size
+  max_devices: 2000                 # Max devices per agent
+  collection_interval: 10           # Default collection interval (seconds)
+  max_memory_mb: 32768              # 32 GB
+  gc_percent: 75                    # GOGC setting
+  heartbeat_interval: 30            # Heartbeat interval (seconds)
+  heartbeat_endpoint: ""            # Optional: management service endpoint
+
+connection_pool:
+  opcua:
+    max_idle: 500
+    max_open: 500
+    max_lifetime: 3600              # seconds
+    idle_timeout: 600               # seconds
+  opcda:
+    max_idle: 1000
+    max_open: 1000
+    max_lifetime: 7200
+    idle_timeout: 1200
+  gateway:
+    max_idle: 500
+    max_open: 500
+    max_lifetime: 3600
+    idle_timeout: 600
+
+batch:
+  interval: 10                      # Batch interval (seconds)
+  max_size: 10000                   # Max points per batch
+  max_memory_mb: 256                # Max memory for buffer
+  flush_timeout: 5                  # Flush timeout (seconds)
+  concurrent_flushes: 4             # Parallel flush workers
+
+influxdb:
+  url: "http://localhost:8086"
+  token: "your-influxdb-token-here"
+  org: "opc-monitoring"
+  bucket: "opc-metrics"
+  batch_size: 5000                  # Points per write batch
+  flush_interval: 10                # seconds
+  retry_interval: 5                 # seconds
+  max_retries: 3
+  max_connections: 10
+  timeout: 30                       # seconds
+
+cache:
+  path: "/var/lib/opc-collector/cache"
+  max_size_gb: 10                   # Max cache size
+  ttl: 86400                        # Cache TTL (seconds) - 24 hours
+  gc_interval: 3600                 # GC interval (seconds) - 1 hour
+
+circuit_breaker:
+  enabled: true
+  failure_threshold: 5              # Failures before open
+  success_threshold: 2              # Successes to close
+  timeout: 60                       # Timeout before retry (seconds)
+  half_open_max_requests: 3         # Max requests in half-open state
+
+monitoring:
+  prometheus:
+    enabled: true
+    port: 9090
+    path: "/metrics"
+  pprof:
+    enabled: false
+    port: 6060
+
+logging:
+  level: "info"                     # debug, info, warn, error
+  format: "json"                    # json, console
+  output: "stdout"                  # stdout or file path
+  max_size_mb: 100
+  max_backups: 10
+  max_age_days: 30
+
+devices:
+  source: "file"                    # file, database, etcd
+  file:
+    path: "configs/machines.yaml"
+    watch: true                     # Hot reload
+  database:
+    dsn: ""
+    table: "opc_devices"
+    refresh_interval: 60            # seconds
+  etcd:
+    endpoints: []
+    prefix: "/opc-collector/devices"

@@ -1,0 +1,131 @@
+# Example machine list for OPC collector
+# This file defines the OPC servers to collect data from
+
+devices:
+  # OPC UA Server Example
+  - id: "opc-server-001"
+    name: "Temperature Sensor Zone A"
+    ip: "192.168.1.100"
+    port: 4840
+    protocol: "opcua"
+    enabled: true
+
+    connection_config:
+      security_mode: "None"          # None, Sign, SignAndEncrypt
+      security_policy: "None"        # None, Basic256Sha256
+      username: ""                   # Optional
+      password: ""                   # Optional
+      certificate: ""                # Optional certificate path
+      timeout: 10                    # Connection timeout (seconds)
+      retry_attempts: 3              # Retry attempts on failure
+      keep_alive: 30                 # Keep-alive interval (seconds)
+
+    metrics:
+      - node_id: "ns=2;s=Temperature"
+        name: "temperature"
+        data_type: "float"
+        unit: "celsius"
+        scale_factor: 1.0
+
+      - node_id: "ns=2;s=Humidity"
+        name: "humidity"
+        data_type: "float"
+        unit: "percent"
+        scale_factor: 1.0
+
+      - node_id: "ns=2;s=Pressure"
+        name: "pressure"
+        data_type: "float"
+        unit: "kPa"
+        scale_factor: 1.0
+
+    interval: 10                     # Collection interval (seconds)
+    location: "Workshop-A-Zone-1"
+    tags:
+      zone: "A"
+      building: "workshop-1"
+      criticality: "high"
+      type: "environmental"
+
+  # Another OPC UA Server Example
+  - id: "opc-server-002"
+    name: "Machine Status Monitor"
+    ip: "192.168.1.101"
+    port: 4840
+    protocol: "opcua"
+    enabled: true
+
+    connection_config:
+      security_mode: "None"
+      timeout: 10
+      retry_attempts: 3
+      keep_alive: 30
+
+    metrics:
+      - node_id: "ns=2;s=MachineStatus"
+        name: "status"
+        data_type: "int"
+        unit: ""
+        scale_factor: 1.0
+
+      - node_id: "ns=2;s=ProductionCount"
+        name: "production_count"
+        data_type: "int"
+        unit: "pieces"
+        scale_factor: 1.0
+
+      - node_id: "ns=2;s=PowerConsumption"
+        name: "power"
+        data_type: "float"
+        unit: "kW"
+        scale_factor: 1.0
+
+    interval: 10
+    location: "Production-Line-1"
+    tags:
+      zone: "B"
+      building: "factory-main"
+      criticality: "medium"
+      type: "production"
+
+  # OPC Gateway Example (for aggregating multiple servers)
+  - id: "opc-gateway-001"
+    name: "Legacy Systems Gateway"
+    ip: "192.168.1.200"
+    port: 8080
+    protocol: "gateway"
+    enabled: true
+
+    connection_config:
+      timeout: 15
+      retry_attempts: 2
+      keep_alive: 60
+
+    metrics:
+      - node_id: "devices/legacy-01/temperature"
+        name: "legacy_temp"
+        data_type: "float"
+        unit: "celsius"
+        scale_factor: 1.0
+
+    interval: 10
+    location: "Legacy-Building"
+    tags:
+      zone: "C"
+      building: "old-facility"
+      criticality: "low"
+      type: "legacy"
+
+# For 1.2M devices, you would typically generate this file programmatically
+# or load devices from a database. Example patterns:
+#
+# devices:
+#   - id: "device-000001"
+#     name: "Temperature Sensor 000001"
+#     ip: "10.0.1.1"
+#     ...
+#   - id: "device-000002"
+#     name: "Temperature Sensor 000002"
+#     ip: "10.0.1.2"
+#     ...
+#   (repeat for all 1.2M devices, distributed across multiple agents)
