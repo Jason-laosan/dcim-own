@@ -1,4 +1,7 @@
 package agent
+nimport (
+	"opc-collector/internal/receiver"
+)
 
 import (
 	"context"

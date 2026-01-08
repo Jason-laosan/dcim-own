@@ -15,7 +15,6 @@ type Config struct {
 	Monitoring     MonitoringConfig     `yaml:"monitoring"`
 	Logging        LoggingConfig        `yaml:"logging"`
 	Devices        DevicesConfig        `yaml:"devices"`
-	Receiver       ReceiverConfig       `yaml:"receiver"`
 }
 
 // AgentConfig holds agent-specific configuration
@@ -228,6 +227,5 @@ func DefaultConfig() *Config {
 				Watch: true,
 			},
 		},
-		Receiver: DefaultReceiverConfig(),
 	}
 }
