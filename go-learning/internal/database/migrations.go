@@ -41,11 +41,30 @@ func RunMigrations() error {
 	}
 	log.Println("files 表已创建或已存在")
 
+	// 创建 users 表
+	createUsersTable := `
+	CREATE TABLE IF NOT EXISTS users (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		username TEXT NOT NULL UNIQUE,
+		email TEXT NOT NULL UNIQUE,
+		password TEXT NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);
+	`
+
+	if _, err := DB.Exec(createUsersTable); err != nil {
+		return err
+	}
+	log.Println("users 表已创建或已存在")
+
 	// 创建索引以提高查询性能
 	createIndexes := []string{
 		"CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);",
 		"CREATE INDEX IF NOT EXISTS idx_tasks_created_at ON tasks(created_at);",
 		"CREATE INDEX IF NOT EXISTS idx_files_uploaded_at ON files(uploaded_at);",
+		"CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);",
+		"CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);",
 	}
 
 	for _, indexSQL := range createIndexes {

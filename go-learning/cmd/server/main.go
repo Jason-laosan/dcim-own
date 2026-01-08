@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	_ "go-learning/docs"
 	"go-learning/internal/database"
 	"go-learning/internal/handlers"
 	"go-learning/internal/middleware"
@@ -16,7 +17,29 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
+
+// @title TaskHub API
+// @version 1.0
+// @description Go 学习项目 - 任务管理系统 API
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url http://www.swagger.io/support
+// @contact.email support@swagger.io
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:8080
+// @BasePath /
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
 
 func main() {
 	log.Println("=== TaskHub - Go 学习项目 ===")
@@ -33,6 +56,7 @@ func main() {
 	db := database.GetDB()
 	taskService := models.NewTaskService(db)
 	fileService := models.NewFileService(db)
+	userService := models.NewUserService(db)
 
 	// 3. 创建 Worker Pool
 	log.Println("启动 Worker Pool...")
@@ -50,6 +74,7 @@ func main() {
 	fileHandler := handlers.NewFileHandler(fileService, "uploads")
 	sseHandler := handlers.NewSSEHandler(taskService)
 	webHandler := handlers.NewWebHandler()
+	authHandler := handlers.NewAuthHandler(userService)
 
 	// 5. 创建 Gin 路由器
 	router := gin.Default()
@@ -64,15 +89,26 @@ func main() {
 	// 8. 加载 HTML 模板
 	router.LoadHTMLGlob("web/templates/*")
 
-	// 9. Web 页面路由
+	// 9. Swagger 文档路由
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	// 10. Web 页面路由
 	router.GET("/", webHandler.HomePage)
 	router.GET("/tasks", webHandler.TasksPage)
 	router.GET("/files", webHandler.FilesPage)
 	router.GET("/monitor", webHandler.MonitorPage)
 
-	// 10. API 路由组
+	// 11. API 路由组
 	api := router.Group("/api")
 	{
+		// 认证 API (无需认证)
+		auth := api.Group("/auth")
+		{
+			auth.POST("/register", authHandler.Register)
+			auth.POST("/login", authHandler.Login)
+			auth.GET("/profile", middleware.AuthMiddleware(), authHandler.GetProfile)
+		}
+
 		// 任务管理 API
 		tasks := api.Group("/tasks")
 		{
@@ -133,24 +169,32 @@ func main() {
 		}
 	}
 
-	// 11. 创建 HTTP 服务器
+	// 12. 创建 HTTP 服务器
 	srv := &http.Server{
 		Addr:    ":8080",
 		Handler: router,
 	}
 
-	// 12. 在 goroutine 中启动服务器
+	// 13. 在 goroutine 中启动服务器
 	go func() {
 		log.Println("======================================")
 		log.Println("服务器启动成功！")
 		log.Println("访问地址: http://localhost:8080")
 		log.Println("======================================")
 		log.Println("")
+		log.Println("📚 Swagger 文档:")
+		log.Println("  http://localhost:8080/swagger/index.html")
+		log.Println("")
 		log.Println("可用页面:")
 		log.Println("  主页:     http://localhost:8080/")
 		log.Println("  任务管理: http://localhost:8080/tasks")
 		log.Println("  文件管理: http://localhost:8080/files")
 		log.Println("  实时监控: http://localhost:8080/monitor")
+		log.Println("")
+		log.Println("🔐 认证 API:")
+		log.Println("  POST   /api/auth/register")
+		log.Println("  POST   /api/auth/login")
+		log.Println("  GET    /api/auth/profile (需要认证)")
 		log.Println("")
 		log.Println("API 端点:")
 		log.Println("  GET    /api/tasks")
@@ -168,7 +212,7 @@ func main() {
 		}
 	}()
 
-	// 13. 优雅关闭
+	// 14. 优雅关闭
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
