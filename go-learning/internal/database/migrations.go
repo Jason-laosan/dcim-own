@@ -1,78 +1,50 @@
 package database
 
-import "log"
+import (
+	"log"
+)
+
+// Task GORM 模型定义（用于迁移）
+type Task struct {
+	ID          int     `gorm:"primaryKey;autoIncrement"`
+	Title       string  `gorm:"not null"`
+	Description string  `gorm:"type:text"`
+	Status      string  `gorm:"default:'pending';index"`
+	Priority    int     `gorm:"default:1"`
+	CreatedAt   string  `gorm:"autoCreateTime;index"`
+	UpdatedAt   string  `gorm:"autoUpdateTime"`
+	CompletedAt *string `gorm:"type:datetime"`
+}
+
+// File GORM 模型定义（用于迁移）
+type File struct {
+	ID           int    `gorm:"primaryKey;autoIncrement"`
+	OriginalName string `gorm:"not null"`
+	StoredName   string `gorm:"not null"`
+	FileSize     int64  `gorm:"not null"`
+	MimeType     string
+	UploadPath   string `gorm:"not null"`
+	UploadedAt   string `gorm:"autoCreateTime;index"`
+}
+
+// User GORM 模型定义（用于迁移）
+type User struct {
+	ID        int    `gorm:"primaryKey;autoIncrement"`
+	Username  string `gorm:"not null;uniqueIndex"`
+	Email     string `gorm:"not null;uniqueIndex"`
+	Password  string `gorm:"not null"`
+	CreatedAt string `gorm:"autoCreateTime"`
+	UpdatedAt string `gorm:"autoUpdateTime"`
+}
 
 // RunMigrations 执行数据库迁移，创建所有必要的表
 func RunMigrations() error {
-	// 创建 tasks 表
-	createTasksTable := `
-	CREATE TABLE IF NOT EXISTS tasks (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		title TEXT NOT NULL,
-		description TEXT,
-		status TEXT DEFAULT 'pending',
-		priority INTEGER DEFAULT 1,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		completed_at DATETIME
-	);
-	`
-
-	if _, err := DB.Exec(createTasksTable); err != nil {
+	// 使用 GORM AutoMigrate 自动创建表和索引
+	err := DB.AutoMigrate(&Task{}, &File{}, &User{})
+	if err != nil {
 		return err
 	}
-	log.Println("tasks 表已创建或已存在")
 
-	// 创建 files 表
-	createFilesTable := `
-	CREATE TABLE IF NOT EXISTS files (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		original_name TEXT NOT NULL,
-		stored_name TEXT NOT NULL,
-		file_size INTEGER NOT NULL,
-		mime_type TEXT,
-		upload_path TEXT NOT NULL,
-		uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
-	);
-	`
-
-	if _, err := DB.Exec(createFilesTable); err != nil {
-		return err
-	}
-	log.Println("files 表已创建或已存在")
-
-	// 创建 users 表
-	createUsersTable := `
-	CREATE TABLE IF NOT EXISTS users (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		username TEXT NOT NULL UNIQUE,
-		email TEXT NOT NULL UNIQUE,
-		password TEXT NOT NULL,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-	);
-	`
-
-	if _, err := DB.Exec(createUsersTable); err != nil {
-		return err
-	}
-	log.Println("users 表已创建或已存在")
-
-	// 创建索引以提高查询性能
-	createIndexes := []string{
-		"CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);",
-		"CREATE INDEX IF NOT EXISTS idx_tasks_created_at ON tasks(created_at);",
-		"CREATE INDEX IF NOT EXISTS idx_files_uploaded_at ON files(uploaded_at);",
-		"CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);",
-		"CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);",
-	}
-
-	for _, indexSQL := range createIndexes {
-		if _, err := DB.Exec(indexSQL); err != nil {
-			return err
-		}
-	}
-	log.Println("数据库索引已创建")
-
+	log.Println("数据库表已创建或更新")
 	return nil
 }

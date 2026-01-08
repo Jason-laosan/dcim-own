@@ -109,8 +109,8 @@ func main() {
 			auth.GET("/profile", middleware.AuthMiddleware(), authHandler.GetProfile)
 		}
 
-		// 任务管理 API
-		tasks := api.Group("/tasks")
+		// 任务管理 API (需要认证)
+		tasks := api.Group("/tasks", middleware.AuthMiddleware())
 		{
 			tasks.GET("", taskHandler.GetTasks)
 			tasks.GET("/:id", taskHandler.GetTask)
@@ -152,8 +152,8 @@ func main() {
 			})
 		}
 
-		// 文件管理 API
-		files := api.Group("/files")
+		// 文件管理 API (需要认证)
+		files := api.Group("/files", middleware.AuthMiddleware())
 		{
 			files.GET("", fileHandler.GetFiles)
 			files.POST("/upload", fileHandler.UploadFile)
@@ -161,8 +161,8 @@ func main() {
 			files.DELETE("/:id", fileHandler.DeleteFile)
 		}
 
-		// SSE 实时推送 API
-		sse := api.Group("/sse")
+		// SSE 实时推送 API (需要认证)
+		sse := api.Group("/sse", middleware.AuthMiddleware())
 		{
 			sse.GET("/tasks", sseHandler.SSETaskUpdates)
 			sse.GET("/system", sseHandler.SSESystemStats)
@@ -196,7 +196,7 @@ func main() {
 		log.Println("  POST   /api/auth/login")
 		log.Println("  GET    /api/auth/profile (需要认证)")
 		log.Println("")
-		log.Println("API 端点:")
+		log.Println("API 端点 (需要认证):")
 		log.Println("  GET    /api/tasks")
 		log.Println("  POST   /api/tasks")
 		log.Println("  GET    /api/files")
